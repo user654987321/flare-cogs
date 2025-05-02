@@ -735,6 +735,50 @@ class Mod(ModClass):
 
     unban = None
 
+    @commands.hybrid_command(name="ban-id")
+    @app_commands.describe(
+        user_id="Die ID des Benutzers, der gebannt werden soll.",
+        days="Anzahl der Tage von Nachrichten, die gelöscht werden sollen (0-7).",
+        reason="Grund für den Bann (optional)."
+    )
+    @commands.guild_only()
+    @commands.bot_has_permissions(ban_members=True)
+    @checks.admin_or_permissions(ban_members=True)
+    async def ban_id(
+        self,
+        ctx: commands.Context,
+        user_id: int,
+        days: Optional[int] = 0,
+        *,
+        reason: str = None
+    ):
+        """Bannt einen Benutzer anhand seiner ID."""
+        guild = ctx.guild
+        author = ctx.author
+    
+        # Überprüfen der Tage
+        if not (0 <= days <= 7):
+            await ctx.send("Ungültige Anzahl von Tagen. Muss zwischen 0 und 7 liegen.")
+            return
+    
+        user = discord.Object(id=user_id)  # Benutzer-ID in ein Discord-Objekt umwandeln
+        audit_reason = get_audit_reason(author, reason, shorten=True)
+    
+        try:
+            await guild.ban(user, reason=audit_reason, delete_message_days=days)
+        except discord.Forbidden:
+            await ctx.send("Ich habe keine Berechtigung, diesen Benutzer zu bannen.")
+            return
+        except Exception as e:
+            await ctx.send(f"Fehler beim Bannen des Benutzers: {str(e)}")
+            return
+    
+        await ctx.send(
+            bold(f"Benutzer mit der ID {user_id} wurde erfolgreich gebannt.") +
+            f"\nGrund: {reason if reason else 'Kein Grund angegeben'}" +
+            f"\nNachrichten der letzten {days} Tage wurden gelöscht."
+        )
+
     @commands.hybrid_command()
     @app_commands.describe(
         user_id="The ID of the user to unban.", reason="The reason for unbanning the user."
