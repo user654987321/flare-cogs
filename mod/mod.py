@@ -735,7 +735,7 @@ class Mod(ModClass):
 
     unban = None
 
-    @commands.hybrid_command(name="ban-id")
+    @commands.hybrid_command(name="banid")
     @app_commands.describe(
         user_id="Die ID des Benutzers, der gebannt werden soll.",
         days="Anzahl der Tage von Nachrichten, die gelöscht werden sollen (0-7).",
@@ -772,12 +772,26 @@ class Mod(ModClass):
         except Exception as e:
             await ctx.send(f"Fehler beim Bannen des Benutzers: {str(e)}")
             return
-    
-        await ctx.send(
-            bold(f"Benutzer mit der ID {user_id} wurde erfolgreich gebannt.") +
-            f"\nGrund: {reason if reason else 'Kein Grund angegeben'}" +
-            f"\nNachrichten der letzten {days} Tage wurden gelöscht."
+
+        await modlog.create_case(
+            self.bot,
+            guild,
+            ctx.message.created_at,
+            "ban",
+            user,
+            author,
+            reason,
+            until=None,
+            channel=None,
         )
+
+        response = f"Benutzer mit der ID {bold(user_id)} wurde erfolgreich gebannt."
+        if reason:
+            response += f"\nGrund: {reason}"
+        if days > 0:
+            response += f"\nNachrichten der letzten {bold(days)} Tage wurden gelöscht."
+        
+        await ctx.send(response)
 
     @commands.hybrid_command()
     @app_commands.describe(
