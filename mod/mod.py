@@ -211,14 +211,14 @@ class Mod(ModClass):
         """
         require_reason = await self._config.guild(ctx.guild).require_reason()
         if require_reason and reason is None:
-            await ctx.send("You must provide a reason for this action.")
+            await ctx.send("Du musst für diese Aktion einen Grund angeben.")
             return
         author = ctx.author
         guild = ctx.guild
 
         if author == member:
             await ctx.send(
-                ("I cannot let you do that. Self-harm is bad {emoji}").format(
+                ("Entschuldige aber ich dich das nicht tun lassen! {emoji}").format(
                     emoji="\N{PENSIVE FACE}"
                 )
             )
@@ -226,26 +226,24 @@ class Mod(ModClass):
         elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, member):
             await ctx.send(
                 (
-                    "I cannot let you do that. You are "
-                    "not higher than the user in the role "
-                    "hierarchy."
+                    "Tut mir leid aber du hast einen niedrigeren Rang als der Benutzer!"
                 )
             )
             return
         elif ctx.guild.me.top_role <= member.top_role or member == ctx.guild.owner:
-            await ctx.send(("I cannot do that due to Discord hierarchy rules."))
+            await ctx.send(("Aufgrund der Hierarchieregeln von Discord kann ich das nicht tun."))
             return
         audit_reason = get_audit_reason(author, reason, shorten=True)
         toggle = await self.config.guild(guild).dm_on_kickban()
         if toggle:
             with contextlib.suppress(discord.HTTPException):
                 em = discord.Embed(
-                    title=bold(("You have been kicked from {guild}.").format(guild=guild)),
+                    title=bold(("Du wurdest vom {guild} Server gekickt.").format(guild=guild)),
                     color=await self.bot.get_embed_color(member),
                 )
                 em.add_field(
-                    name=("**Reason**"),
-                    value=reason if reason is not None else ("No reason was given."),
+                    name=("**Grund**"),
+                    value=reason if reason is not None else ("Kein Grund angegeben."),
                     inline=False,
                 )
                 await member.send(embed=em)
@@ -253,10 +251,10 @@ class Mod(ModClass):
             await guild.kick(member, reason=audit_reason)
             log.info("{}({}) kicked {}({})".format(author.name, author.id, member.name, member.id))
         except discord.errors.Forbidden:
-            await ctx.send("I'm not allowed to do that.")
+            await ctx.send("Das darf ich nicht tun!")
         except Exception:
             log.exception(
-                "{}({}) attempted to kick {}({}), but an error occurred.".format(
+                "{}({}) hat versucht {}({}) zu kicken, aber es ist ein Fehler aufgetreten!".format(
                     author.name, author.id, member.name, member.id
                 )
             )
@@ -336,20 +334,18 @@ class Mod(ModClass):
 
         if author == member:
             await ctx.send(
-                ("I cannot let you do that. Self-harm is bad {}").format("\N{PENSIVE FACE}")
+                ("Entschuldige aber ich dich das nicht tun lassen! {}").format("\N{PENSIVE FACE}")
             )
             return
         elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, member):
             await ctx.send(
                 (
-                    "I cannot let you do that. You are "
-                    "not higher than the user in the role "
-                    "hierarchy."
+                    "Tut mir leid aber du hast einen niedrigeren Rang als der Benutzer!"
                 )
             )
             return
         elif guild.me.top_role <= member.top_role or member == guild.owner:
-            await ctx.send(("I cannot do that due to Discord hierarchy rules."))
+            await ctx.send(("Aufgrund der Hierarchieregeln von Discord kann ich das nicht tun."))
             return
 
         guild_data = await self.config.guild(guild).all()
@@ -362,7 +358,7 @@ class Mod(ModClass):
             days = guild_data["default_days"]
 
         if not (0 <= days <= 7):
-            await ctx.send(("Invalid days. Must be between 0 and 7."))
+            await ctx.send(("Die Tage sind ungütig! Muss zwischen 0 und 7 sein."))
             return
         invite = await self.get_invite_for_reinvite(ctx, int(duration.total_seconds() + 86400))
 
@@ -372,13 +368,13 @@ class Mod(ModClass):
 
         with contextlib.suppress(discord.HTTPException):
             # We don't want blocked DMs preventing us from banning
-            msg = ("You have been temporarily banned from {server_name} until {date}.").format(
+            msg = ("Du wurdest vorübergehend bis {date} von {server_name} ausgeschlossen.").format(
                 server_name=guild.name, date=discord.utils.format_dt(unban_time)
             )
             if guild_data["dm_on_kickban"] and reason:
-                msg += ("\n\n**Reason:** {reason}").format(reason=reason)
+                msg += ("\n\n**Grund:** {reason}").format(reason=reason)
             if invite:
-                msg += ("\n\nHere is an invite for when your ban expires: {invite_link}").format(
+                msg += ("\n\nHier ist ein Invite, wenn dein zeitweiliger Ban abläuft: {invite_link}").format(
                     invite_link=invite
                 )
             await member.send(msg)
@@ -388,9 +384,9 @@ class Mod(ModClass):
         try:
             await guild.ban(member, reason=audit_reason, delete_message_days=days)
         except discord.Forbidden:
-            await ctx.send(("I can't do that for some reason."))
+            await ctx.send(("Ich kann das aus irgend einem Grund nicht tun."))
         except discord.HTTPException:
-            await ctx.send(("Something went wrong while banning."))
+            await ctx.send(("Etwas ist beim Bannen schief gelaufen!"))
         else:
             await modlog.create_case(
                 self.bot,
@@ -450,7 +446,7 @@ class Mod(ModClass):
 
         if author == member:
             await ctx.send(
-                ("I cannot let you do that. Self-harm is bad {emoji}").format(
+                ("Entschuldige aber ich dich das nicht tun lassen! {emoji}").format(
                     emoji="\N{PENSIVE FACE}"
                 )
             )
@@ -458,9 +454,7 @@ class Mod(ModClass):
         elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, member):
             await ctx.send(
                 (
-                    "I cannot let you do that. You are "
-                    "not higher than the user in the role "
-                    "hierarchy."
+                    "Tut mir leid aber du hast einen niedrigeren Rang als der Benutzer!"
                 )
             )
             return
@@ -472,9 +466,8 @@ class Mod(ModClass):
         try:  # We don't want blocked DMs preventing us from banning
             msg = await member.send(
                 (
-                    "You have been banned and "
-                    "then unbanned as a quick way to delete your messages.\n"
-                    "You can now join the server again. {invite_link}"
+                    "Du wurdest gesperrt und anschließend wieder entsperrt, um deine Nachrichten schnell zu löschen.\n"
+                    "Du kannst dem Server jetzt wieder beitreten. {invite_link}"
                 ).format(invite_link=invite)
             )
         except discord.HTTPException:
@@ -482,13 +475,13 @@ class Mod(ModClass):
         try:
             await guild.ban(member, reason=audit_reason, delete_message_days=1)
         except discord.errors.Forbidden:
-            await ctx.send(("My role is not high enough to softban that user."))
+            await ctx.send(("Meine Rolle ist nicht hoch genug, um diesen Benutzer per Softban zu sperren."))
             if msg is not None:
                 await msg.delete()
             return
         except discord.HTTPException:
             log.exception(
-                "{}({}) attempted to softban {}({}), but an error occurred trying to ban them.".format(
+                "{}({}) hat versucht {}({}) per Softban zu blockieren, aber beim Versuch ist ein Fehler aufgetreten!".format(
                     author.name, author.id, member.name, member.id
                 )
             )
@@ -497,7 +490,7 @@ class Mod(ModClass):
             await guild.unban(member)
         except discord.HTTPException:
             log.exception(
-                "{}({}) attempted to softban {}({}), but an error occurred trying to unban them.".format(
+                "{}({}) at versucht {}({}) per Softban zu blockieren, doch beim versucht die Sperre auf zu heben ist ein Fehler aufgetreten!".format(
                     author.name, author.id, member.name, member.id
                 )
             )
@@ -574,7 +567,7 @@ class Mod(ModClass):
         """
         require_reason = await self._config.guild(ctx.guild).require_reason()
         if require_reason and reason is None:
-            await ctx.send("You must provide a reason for this action.")
+            await ctx.send("Für diese Aktion musst du einen Grund angeben.")
             return
         guild = ctx.guild
         if days is None:
@@ -631,36 +624,34 @@ class Mod(ModClass):
         removed_temp = False
 
         if not (0 <= days <= 7):
-            return False, ("Invalid days. Must be between 0 and 7.")
+            return False, ("Die Tage sind ungütig! Muss zwischen 0 und 7 sein.")
 
         if isinstance(user, discord.Member):
             if author == user:
                 return (
                     False,
-                    ("I cannot let you do that. Self-harm is bad {}").format("\N{PENSIVE FACE}"),
+                    ("Entschuldige aber ich dich das nicht tun lassen! {}").format("\N{PENSIVE FACE}"),
                 )
             elif not await is_allowed_by_hierarchy(self.bot, self.config, guild, author, user):
                 return (
                     False,
                     (
-                        "I cannot let you do that. You are "
-                        "not higher than the user in the role "
-                        "hierarchy."
+                        "Tut mir leid aber du hast einen niedrigeren Rang als der Benutzer!"
                     ),
                 )
             elif guild.me.top_role <= user.top_role or user == guild.owner:
-                return False, ("I cannot do that due to Discord hierarchy rules.")
+                return False, ("Aufgrund der Hierarchieregeln von Discord kann ich das nicht tun.")
 
             toggle = await self.config.guild(guild).dm_on_kickban()
             if toggle:
                 with contextlib.suppress(discord.HTTPException):
                     em = discord.Embed(
-                        title=bold(("You have been banned from {guild}.").format(guild=guild)),
+                        title=bold(("Du wurdest von {guild} gebannt!").format(guild=guild)),
                         color=await self.bot.get_embed_color(user),
                     )
                     em.add_field(
-                        name=("**Reason**"),
-                        value=reason if reason is not None else ("No reason was given."),
+                        name=("**Grund**"),
+                        value=reason if reason is not None else ("Kein Grund angegeben."),
                         inline=False,
                     )
                     await user.send(embed=em)
@@ -681,7 +672,7 @@ class Mod(ModClass):
                 else:
                     return (
                         False,
-                        ("User with ID {user_id} is already banned.").format(user_id=user.id),
+                        ("Benutzer mit der ID \"{user_id}\" ist bereits gebannt.").format(user_id=user.id),
                     )
 
             ban_type = "hackban"
@@ -695,7 +686,7 @@ class Mod(ModClass):
                 )
             )
             success_message = (
-                "User with ID {user(id)} was upgraded from a temporary to a permanent ban."
+                "Benutzer mit der ID {user(id)} wurde von einem vorübergehenden zu einem dauerhaften Ban hochgestuft."
             )
         else:
             username = user.name if hasattr(user, "name") else "Unknown"
@@ -717,7 +708,7 @@ class Mod(ModClass):
                         author.name, author.id, ban_type, username, user.id
                     )
                 )
-                return False, ("An unexpected error occurred.")
+                return False, ("Ein Fehler ist aufgetreten.")
         if create_modlog_case:
             await modlog.create_case(
                 self.bot,
@@ -756,12 +747,27 @@ class Mod(ModClass):
         guild = ctx.guild
         author = ctx.author
     
-        # Überprüfen der Tage
         if not (0 <= days <= 7):
             await ctx.send("Ungültige Anzahl von Tagen. Muss zwischen 0 und 7 liegen.")
             return
     
-        user = discord.Object(id=user_id)  # Benutzer-ID in ein Discord-Objekt umwandeln
+        user = discord.Object(id=user_id) 
+        try:
+            # Prüfen, ob der Benutzer bereits gebannt ist
+            existing_ban = await guild.fetch_ban(user)
+            if existing_ban:
+                await ctx.send(f"Der Benutzer mit der ID {bold(user_id)} ist bereits gebannt.")
+                return
+        except discord.NotFound:
+            # Benutzer ist nicht gebannt, wir machen weiter
+            pass
+        except discord.Forbidden:
+            await ctx.send("Ich habe nicht die Berechtigung, Bann-Informationen abzurufen.")
+            return
+        except Exception as e:
+            await ctx.send(f"Ein Fehler ist aufgetreten: {str(e)}")
+            return
+
         audit_reason = get_audit_reason(author, reason, shorten=True)
     
         try:
@@ -823,7 +829,7 @@ class Mod(ModClass):
         try:
             await guild.unban(ban_entry.user, reason=audit_reason)
         except discord.HTTPException:
-            await ctx.send(("Something went wrong while attempting to unban that user."))
+            await ctx.send(("Beim Versuch, den Ban von diesem Benutzer aufzuheben, ist ein Fehler aufgetreten."))
             return
         else:
             await modlog.create_case(
@@ -864,7 +870,7 @@ class Mod(ModClass):
             user = ctx.bot.get_user(user_id)
             if not user:
                 await ctx.send(
-                    ("I don't share another server with this user. I can't reinvite them.")
+                    ("Ich kann den Benutzer nicht wieder einladen, da ich keinen Server mit dem Benutzer teile.")
                 )
                 return
 
@@ -873,22 +879,21 @@ class Mod(ModClass):
                 try:
                     await user.send(
                         (
-                            "You've been unbanned from {server}.\n"
-                            "Here is an invite for that server: {invite_link}"
+                            "Du bist nun nicht mehr auf dem Server {server} gebannt.\n"
+                            "Hier ist eine Einladung zum Server: {invite_link}"
                         ).format(server=guild.name, invite_link=invite)
                     )
                 except discord.Forbidden:
                     await ctx.send(
                         (
-                            "I failed to send an invite to that user. "
-                            "Perhaps you may be able to send it for me?\n"
-                            "Here's the invite link: {invite_link}"
+                            "Ich konnte diesem Benutzer keine Einladung senden. "
+                            "Könntest du vielleicht versuchen Ihn für mich zu versenden?\n"
+                            "Hier ist der Invite Link: {invite_link}"
                         ).format(invite_link=invite)
                     )
                 except discord.HTTPException:
                     await ctx.send(
                         (
-                            "Something went wrong when attempting to send that user "
-                            "an invite. Here's the link so you can try: {invite_link}"
+                            "Beim Versuch, diesem Benutzer eine Einladung zu senden, ist ein Fehler aufgetreten. Hier ist der Link: {invite_link}."
                         ).format(invite_link=invite)
                     )
