@@ -162,9 +162,9 @@ class Mod(ModClass):
         - [Embed Block](https://seina-cogs.readthedocs.io/en/latest/tags/parsing_blocks.html#embed-block)
 
         **Variables:**
-        - `{user}`: [member that was tempbanned.](https://seina-cogs.readthedocs.io/en/latest/tags/default_variables.html#author-block)
-        - `{moderator}`: [modrator that tempbanned the member.](https://seina-cogs.readthedocs.io/en/latest/tags/default_variables.html#author-block)
-        - `{reason}`: reason for the tempban.
+        - `{user}`: [member that was unbanned.](https://seina-cogs.readthedocs.io/en/latest/tags/default_variables.html#author-block)
+        - `{moderator}`: [modrator that unbanned the member.](https://seina-cogs.readthedocs.io/en/latest/tags/default_variables.html#author-block)
+        - `{reason}`: reason for the unban.
         - `{guild}`: [server](https://seina-cogs.readthedocs.io/en/latest/tags/default_variables.html#server-block)
         """
         guild = ctx.guild
@@ -824,7 +824,7 @@ class Mod(ModClass):
         try:
             ban_entry = await guild.fetch_ban(discord.Object(user_id))
         except discord.NotFound:
-            await ctx.send(("It seems that user isn't banned!"))
+            await ctx.send(("Dieser Benutzer scheint nicht gebannt zu sein!"))
             return
         try:
             await guild.unban(ban_entry.user, reason=audit_reason)
